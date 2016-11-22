@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"reflect"
 	"sync/atomic"
 
 	"fmt"
@@ -129,7 +130,7 @@ func StartTimers(data []byte, excutor taskexcutor.Excutor) func() {
 	if !atomic.CompareAndSwapInt32(&loadstate, 0, 1) {
 		panic(errors.New("dbtimer closed"))
 	}
-	if excutor == nil {
+	if excutor == nil || reflect.ValueOf(excutor).IsNil() {
 		panic(errors.New("illegal timer excutor"))
 	}
 	info := &TimerInfo{
