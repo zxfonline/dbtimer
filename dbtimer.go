@@ -56,6 +56,8 @@ type RTimer struct {
 	Receiver int64 //接受者表示符
 	Msg      Msg   //存储的数据
 	expired  int64 // 到期的 UTC时间 毫秒
+	//定时任务唯一id
+	TimerId int64
 }
 
 type TimerInfo struct {
@@ -108,6 +110,7 @@ func CreateTimer(userId int64, delay int64, msg Msg) int64 {
 		Receiver: userId,
 		expired:  expired,
 		Msg:      msg,
+		TimerId:  tid,
 	}
 	return tid
 }
@@ -176,7 +179,8 @@ func working() {
 		select {
 		case id := <-timer_ch:
 			if ts, ex := timer_map[id]; ex {
-				CancelTimer(id)
+				//需要玩家手动释放，避免任务执行失败或丢失
+				// CancelTimer(id)
 				if tt, ok := event_trigger[ts.Msg.Action]; ok {
 					tt.AddArgs(0, ts)
 					tsexcutor.Excute(tt)
@@ -200,6 +204,7 @@ func rescheduleTimers(info *TimerInfo) {
 			Receiver: item.Receiver,
 			Msg:      item.Data,
 			expired:  item.Expired,
+			TimerId:  item.Id,
 		}
 	}
 }
