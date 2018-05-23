@@ -178,7 +178,7 @@ func working() {
 			if ts, ex := timer_map[id]; ex {
 				CancelTimer(id)
 				if tt, ok := event_trigger[ts.Msg.Action]; ok {
-					tt.SetArg(0, ts)
+					tt.AddArgs(0, ts)
 					tsexcutor.Excute(tt)
 				} else {
 					logger.Warnf("no found trigger, timer:%+v", ts)
