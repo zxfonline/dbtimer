@@ -9,6 +9,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"reflect"
+	"sync"
 	"sync/atomic"
 
 	"fmt"
@@ -26,6 +27,7 @@ var (
 	logger *golog.Logger = golog.New("DBTimer")
 
 	timer_map map[int64]*RTimer
+	_timer_lock sync.RWMutex
 
 	timer_ch      chan int64
 	nextTimerId   int64
@@ -106,12 +108,14 @@ func CreateTimer(userId int64, delay int64, msg Msg) int64 {
 	tid := atomic.AddInt64(&nextTimerId, 1)
 
 	particletimer.Add(tid, expired, timer_ch)
+	_timer_lock.Lock()
 	timer_map[tid] = &RTimer{
 		Receiver: userId,
 		expired:  expired,
 		Msg:      msg,
 		TimerId:  tid,
 	}
+	_timer_lock.Unlock()
 	return tid
 }
 
@@ -178,7 +182,9 @@ func working() {
 	for q := false; !q; {
 		select {
 		case id := <-timer_ch:
+			_timer_lock.RLock()
 			if ts, ex := timer_map[id]; ex {
+				_timer_lock.RUnlock()
 				//需要玩家手动释放，避免任务执行失败或丢失
 				// CancelTimer(id)
 				if tt, ok := event_trigger[ts.Msg.Action]; ok {
@@ -188,6 +194,7 @@ func working() {
 					logger.Warnf("no found trigger, timer:%+v", ts)
 				}
 			} else {
+				_timer_lock.RUnlock()
 				CancelTimer(id)
 			}
 		case <-stopD:
@@ -210,6 +217,8 @@ func rescheduleTimers(info *TimerInfo) {
 }
 
 func DumpTimers() (error, []byte) {
+	_timer_lock.Lock()
+	defer _timer_lock.Unlock()
 	info := TimerInfo{
 		Timers: make([]DBTimer, 0, len(timer_map)),
 		NextId: nextTimerId,
@@ -238,8 +247,17 @@ func DumpTimers() (error, []byte) {
 
 //关闭指定id的定时事件
 func CancelTimer(timerId int64) {
-	particletimer.Del(timerId)
+	if timerId == 0 {
+		return
+	}
+	_timer_lock.Lock()
+	if _, present := timer_map[timerId]; !present {
+		_timer_lock.Unlock()
+		return
+	}
 	delete(timer_map, timerId)
+	_timer_lock.Unlock()
+	particletimer.Del(timerId)
 }
 
 //指定定时事件是否存在
@@ -247,8 +265,8 @@ func TimerExist(timerId int64) bool {
 	if timerId == 0 {
 		return false
 	}
-	if _, present := timer_map[timerId]; present {
-		return true
-	}
-	return false
+	_timer_lock.RLock()
+	_, present := timer_map[timerId]
+	_timer_lock.RUnlock()
+	return present
 }
