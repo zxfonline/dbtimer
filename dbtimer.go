@@ -265,7 +265,7 @@ func DumpTimers() (error, []byte) {
 	if err := enc.Encode(info); err != nil {
 		return err, nil
 	}
-	logger.Infof("save timerNextId=%d,size:%d", nextTimerId, len(info.Timers))
+	logger.Debugf("save timerNextId=%d,size:%d", nextTimerId, len(info.Timers))
 	return nil, buffer.Bytes()
 }
 
