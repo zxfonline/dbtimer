@@ -15,6 +15,7 @@ import (
 	"fmt"
 
 	"github.com/zxfonline/chanutil"
+	"github.com/zxfonline/expvar"
 	"github.com/zxfonline/particletimer"
 
 	"github.com/zxfonline/golog"
@@ -65,8 +66,8 @@ type Msg struct {
 //事件
 type RTimer struct {
 	Receiver uint64 //接受者标识符
-	Msg      Msg   //存储的数据
-	expired  int64 // 到期的 UTC时间 毫秒
+	Msg      Msg    //存储的数据
+	expired  int64  // 到期的 UTC时间 毫秒
 	//定时任务唯一id
 	TimerId int64
 	//particleTimer id
@@ -81,9 +82,9 @@ type TimerInfo struct {
 //存档定时器数据 Marshal/unmarshal timers
 type DBTimer struct {
 	Receiver uint64 //接受者标识符
-	Expired  int64 // 到期的 UTC时间 毫秒
-	Id       int64 //定时器唯一id
-	Data     Msg   //存储的数据
+	Expired  int64  // 到期的 UTC时间 毫秒
+	Id       int64  //定时器唯一id
+	Data     Msg    //存储的数据
 }
 
 func Closed() bool {
@@ -177,6 +178,7 @@ func StartTimers(data []byte, excutor taskexcutor.Excutor) func() {
 	return func() {
 		rescheduleTimers(info)
 		logger.Infof("start db timer.")
+		expvar.RegistChanMonitor("chanDBTimer", timer_ch)
 		go working()
 	}
 }
