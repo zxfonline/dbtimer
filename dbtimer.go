@@ -60,7 +60,8 @@ type Action int32
 //定时器数据包
 type Msg struct {
 	Action Action
-	Data   interface{} //事件数据
+	//事件数据 需要 gob.Register(Struct{})
+	Data interface{}
 }
 
 //事件
