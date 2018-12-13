@@ -66,9 +66,9 @@ type Msg struct {
 
 //事件
 type RTimer struct {
-	Receiver uint64 //接受者标识符
-	Msg      Msg    //存储的数据
-	expired  int64  // 到期的 UTC时间 毫秒
+	Receiver int64 //接受者标识符
+	Msg      Msg   //存储的数据
+	expired  int64 // 到期的 UTC时间 毫秒
 	//定时任务唯一id
 	TimerId int64
 	//particleTimer id
@@ -82,10 +82,10 @@ type TimerInfo struct {
 
 //存档定时器数据 Marshal/unmarshal timers
 type DBTimer struct {
-	Receiver uint64 //接受者标识符
-	Expired  int64  // 到期的 UTC时间 毫秒
-	Id       int64  //定时器唯一id
-	Data     Msg    //存储的数据
+	Receiver int64 //接受者标识符
+	Expired  int64 // 到期的 UTC时间 毫秒
+	Id       int64 //定时器唯一id
+	Data     Msg   //存储的数据
 }
 
 func Closed() bool {
@@ -104,7 +104,7 @@ func Close() {
 * 注意：存档导出只会导出设置了userId>0标识符的任务
 * 其他任务统一当临时任务处理，不做存档
  */
-func CreateTimer(userId uint64, delay int64, msg Msg) int64 {
+func CreateTimer(userId int64, delay int64, msg Msg) int64 {
 	if atomic.LoadInt32(&loadstate) != 1 {
 		logger.Warnf("timer no open or closed, msg:%+v", msg)
 		return 0
