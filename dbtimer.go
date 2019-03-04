@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	MAX_TIMER_CHAN_SIZE = 10000
+	MAX_TIMER_CHAN_SIZE = 0XFFFF
 
 	logger *golog.Logger = golog.New("DBTimer")
 
@@ -110,9 +110,9 @@ func CreateTimer(userId int64, delay int64, msg Msg) int64 {
 		return 0
 	}
 	if len(timer_ch) >= MAX_TIMER_CHAN_SIZE {
-		logger.Errorf("timer overflow, cur size: %v, discard timer userId:%v,delay:%v,msg:%+v",
+		logger.Warnln("timer overflow, cur size: %v, discard timer userId:%v,delay:%v,msg:%+v",
 			len(timer_ch), userId, delay, msg)
-		return 0
+		// return 0
 	}
 	if _, ok := event_trigger[msg.Action]; !ok {
 		logger.Warnf("no found trigger, msg:%+v", msg)
