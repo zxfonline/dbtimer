@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	MAX_TIMER_CHAN_SIZE = 0XFFFF
+	MAX_TIMER_CHAN_SIZE = 0x10000
 
 	logger *golog.Logger = golog.New("DBTimer")
 
