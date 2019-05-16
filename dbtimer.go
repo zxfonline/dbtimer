@@ -101,17 +101,17 @@ func Close() {
 
 /**
 *创建延时执行定时器 delay 毫秒 返回定时器唯一id 当返回0表示添加失败
-* 注意：存档导出只会导出设置了userId>0标识符的任务
+* 注意：存档导出只会导出设置了receiver>0标识符的任务
 * 其他任务统一当临时任务处理，不做存档
  */
-func CreateTimer(userId int64, delay int64, msg Msg) int64 {
+func CreateTimer(receiver int64, delay int64, msg Msg) int64 {
 	if atomic.LoadInt32(&loadstate) != 1 {
 		logger.Warnf("timer no open or closed, msg:%+v", msg)
 		return 0
 	}
 	if len(timer_ch) >= MAX_TIMER_CHAN_SIZE {
-		logger.Warnln("timer overflow, cur size: %v, discard timer userId:%v,delay:%v,msg:%+v",
-			len(timer_ch), userId, delay, msg)
+		logger.Warnln("timer overflow, cur size: %v, discard timer receiver:%v,delay:%v,msg:%+v",
+			len(timer_ch), receiver, delay, msg)
 		// return 0
 	}
 	if _, ok := event_trigger[msg.Action]; !ok {
@@ -125,7 +125,7 @@ func CreateTimer(userId int64, delay int64, msg Msg) int64 {
 	defer _timer_lock.Unlock()
 	nextTimerId++
 	rtimer := &RTimer{
-		Receiver: userId,
+		Receiver: receiver,
 		expired:  particletimer.Current() + delay,
 		Msg:      msg,
 		TimerId:  nextTimerId,
